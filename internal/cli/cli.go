@@ -2,6 +2,8 @@ package cli
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -70,6 +72,12 @@ func Run() {
 			if err != nil {
 				fmt.Printf("Ошибка: %v", err)
 			}
+		}
+	case "serve":
+		fileServer := http.FileServer(http.Dir("./public"))
+		err := http.ListenAndServe(":8080", fileServer)
+		if err != nil {
+			log.Fatal(err)
 		}
 
 	default:
