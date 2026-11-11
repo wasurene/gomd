@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/wasurene/gomd/internal/converter"
+	"gopkg.in/yaml.v3"
 )
 
 func WriteFile(path string, data []byte) error {
@@ -46,4 +49,34 @@ func GetMarkdownFiles(dir string) ([]string, error) {
 	}
 
 	return filenames, nil
+}
+
+func ParseFrontMatter(md []byte) (converter.FrontMatter, []byte, error) {
+	text := string(md)
+
+	if !strings.HasPrefix(text, "---") {
+		fmt.Println("Где открывающие ---?")
+		return converter.FrontMatter{}, []byte(md), nil
+	}
+
+	text = text[3:]
+
+	endIndex := strings.Index(text, "---")
+	if endIndex == -1 {
+		fmt.Println("Где закрывающие ---?")
+		return converter.FrontMatter{}, []byte(md), nil
+	}
+
+	yamlPart := text[:endIndex]
+
+	markdowmPart := text[endIndex+3:]
+
+	var fm converter.FrontMatter
+
+	err := yaml.Unmarshal([]byte(yamlPart), &fm)
+	if err != nil {
+		return converter.FrontMatter{}, []byte{}, err
+	}
+
+	return fm, []byte(markdowmPart), nil
 }

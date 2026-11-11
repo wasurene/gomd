@@ -58,8 +58,14 @@ func Run() {
 				fmt.Printf("Ошибка: %v", err)
 			}
 
+			fm, clearMd, err := storage.ParseFrontMatter(bytesMd)
+			if err != nil {
+				fmt.Printf("Ошибка: %v", err)
+			}
+
 			data := converter.PageData{
-				Content: string(bytesMd),
+				Title:   fm.Title,
+				Content: string(clearMd),
 				Pages:   sliceMd,
 			}
 

@@ -6,8 +6,13 @@ import (
 )
 
 type PageData struct {
+	Title   string
 	Content string
 	Pages   []string
+}
+
+type FrontMatter struct {
+	Title string `yaml:"title"`
 }
 
 func MarkdownToHTML(data PageData) ([]byte, error) {
