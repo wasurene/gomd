@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Мой сайт</title>
+</head>
+
+<body>
+    <header>
+        <h2>GOMD Wiki</h2>
+        {{range .Pages}}
+        <a href="{{.}}.html">{{.}}</a> |
+        {{end}}
+    </header>
+    <main>
+        {{.Content}}
+    </main>
+    <footer>Создано на Go</footer>
+</body>
+
+</html>

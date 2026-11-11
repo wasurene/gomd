@@ -35,12 +35,19 @@ func Run() {
 		fmt.Printf("Файл %v создан", pathMd)
 
 	case "build":
+		var sliceMd []string
+
 		mdFiles, err := storage.GetMarkdownFiles("content")
 		if err != nil {
 			fmt.Printf("Ошибка: %v", err)
 		}
 
 		for _, mdFile := range mdFiles {
+			sliceMd = append(sliceMd, strings.TrimSuffix(mdFile, ".md"))
+		}
+
+		for _, mdFile := range mdFiles {
+
 			pathMd := filepath.Join("content", mdFile)
 			pathHTML := filepath.Join("public", strings.TrimSuffix(mdFile, ".md")+".html")
 
@@ -49,7 +56,15 @@ func Run() {
 				fmt.Printf("Ошибка: %v", err)
 			}
 
-			bytesHTML := converter.MarkdownToHTML(bytesMd)
+			data := converter.PageData{
+				Content: string(bytesMd),
+				Pages:   sliceMd,
+			}
+
+			bytesHTML, err := converter.MarkdownToHTML(data)
+			if err != nil {
+				fmt.Printf("Ошибка: %v", err)
+			}
 
 			err = storage.WriteFile(pathHTML, bytesHTML)
 			if err != nil {

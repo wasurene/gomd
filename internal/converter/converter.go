@@ -1,9 +1,27 @@
 package converter
 
-import "fmt"
+import (
+	"bytes"
+	"html/template"
+)
 
-func MarkdownToHTML(md []byte) []byte {
-	htmlString := fmt.Sprintf("<html><body><pre> %s </pre></body></html>", string(md))
+type PageData struct {
+	Content string
+	Pages   []string
+}
 
-	return []byte(htmlString)
+func MarkdownToHTML(data PageData) ([]byte, error) {
+	sample, err := template.ParseFiles("templates/layout.html")
+	if err != nil {
+		return []byte{}, err
+	}
+
+	var buff bytes.Buffer
+
+	err = sample.Execute(&buff, data)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	return buff.Bytes(), nil
 }
