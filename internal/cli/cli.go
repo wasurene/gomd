@@ -9,11 +9,18 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/wasurene/gomd/internal/config"
 	"github.com/wasurene/gomd/internal/converter"
 	"github.com/wasurene/gomd/internal/storage"
 )
 
 func Run() {
+	cfg, err := config.Load("config.yaml")
+	if err != nil {
+		fmt.Printf("Ошибка при чтении конфига: %v", err)
+		os.Exit(1)
+	}
+
 	if len(os.Args) <= 1 {
 		fmt.Println("Ошибка: напиши команду")
 		fmt.Println("Пример команд: go run . new about / go run . build")
@@ -22,16 +29,17 @@ func Run() {
 
 	switch os.Args[1] {
 	case "new":
-		def, err := os.ReadFile("templates/default.md")
+		file := filepath.Join(cfg.TemplateDir, "default.md")
+		def, err := os.ReadFile(file)
 		if err != nil {
 			fmt.Printf("Ошибка при чтении шаблона: %v", err)
 			os.Exit(1)
 		}
 
 		result := strings.ReplaceAll(string(def), "{{.Title}}", os.Args[2])
-		pathMd := filepath.Join("content", os.Args[2]+".md")
+		pathMd := filepath.Join(cfg.ContentDir, os.Args[2]+".md")
 
-		err = os.MkdirAll("content", 0755)
+		err = os.MkdirAll(cfg.ContentDir, 0755)
 		if err != nil {
 			fmt.Printf("Ошибка при создании папки: %v", err)
 		}
@@ -46,7 +54,7 @@ func Run() {
 	case "build":
 		var sliceMd []string
 
-		mdFiles, err := storage.GetMarkdownFiles("content")
+		mdFiles, err := storage.GetMarkdownFiles(cfg.ContentDir)
 		if err != nil {
 			fmt.Printf("Ошибка: %v", err)
 		}
@@ -57,8 +65,8 @@ func Run() {
 
 		for _, mdFile := range mdFiles {
 
-			pathMd := filepath.Join("content", mdFile)
-			pathHTML := filepath.Join("public", strings.TrimSuffix(mdFile, ".md")+".html")
+			pathMd := filepath.Join(cfg.ContentDir, mdFile)
+			pathHTML := filepath.Join(cfg.OutputDir, strings.TrimSuffix(mdFile, ".md")+".html")
 
 			bytesMd, err := storage.ReadFile(pathMd)
 			if err != nil {
@@ -76,7 +84,8 @@ func Run() {
 				Pages:   sliceMd,
 			}
 
-			bytesHTML, err := converter.MarkdownToHTML(data)
+			templatePath := filepath.Join(cfg.TemplateDir, "layout.html")
+			bytesHTML, err := converter.MarkdownToHTML(data, templatePath)
 			if err != nil {
 				fmt.Printf("Ошибка: %v", err)
 			}
@@ -87,7 +96,7 @@ func Run() {
 			}
 		}
 	case "serve":
-		fileServer := http.FileServer(http.Dir("./public"))
+		fileServer := http.FileServer(http.Dir(cfg.OutputDir))
 		err := http.ListenAndServe(":8080", fileServer)
 		if err != nil {
 			log.Fatal(err)

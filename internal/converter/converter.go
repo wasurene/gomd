@@ -17,7 +17,7 @@ type FrontMatter struct {
 	Title string `yaml:"title"`
 }
 
-func MarkdownToHTML(data PageData) ([]byte, error) {
+func MarkdownToHTML(data PageData, templatePath string) ([]byte, error) {
 	md := goldmark.New()
 	var buf bytes.Buffer
 
@@ -28,7 +28,7 @@ func MarkdownToHTML(data PageData) ([]byte, error) {
 
 	data.Content = template.HTML(buf.String())
 
-	sample, err := template.ParseFiles("templates/layout.html")
+	sample, err := template.ParseFiles(templatePath)
 	if err != nil {
 		return []byte{}, err
 	}
