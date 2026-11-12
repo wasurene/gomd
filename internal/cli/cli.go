@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -21,15 +22,21 @@ func Run() {
 
 	switch os.Args[1] {
 	case "new":
-		slicebyte := []byte("# " + os.Args[2])
+		def, err := os.ReadFile("templates/default.md")
+		if err != nil {
+			fmt.Printf("Ошибка при чтении шаблона: %v", err)
+			os.Exit(1)
+		}
+
+		result := strings.ReplaceAll(string(def), "{{.Title}}", os.Args[2])
 		pathMd := filepath.Join("content", os.Args[2]+".md")
 
-		err := os.MkdirAll("content", 0755)
+		err = os.MkdirAll("content", 0755)
 		if err != nil {
 			fmt.Printf("Ошибка при создании папки: %v", err)
 		}
 
-		err = os.WriteFile(pathMd, slicebyte, 0644)
+		err = os.WriteFile(pathMd, []byte(result), 0644)
 		if err != nil {
 			fmt.Printf("Ошибка при записи в файл: %v", err)
 		}
@@ -65,7 +72,7 @@ func Run() {
 
 			data := converter.PageData{
 				Title:   fm.Title,
-				Content: string(clearMd),
+				Content: template.HTML(string(clearMd)),
 				Pages:   sliceMd,
 			}
 

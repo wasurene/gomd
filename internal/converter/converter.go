@@ -3,11 +3,13 @@ package converter
 import (
 	"bytes"
 	"html/template"
+
+	"github.com/yuin/goldmark"
 )
 
 type PageData struct {
 	Title   string
-	Content string
+	Content template.HTML
 	Pages   []string
 }
 
@@ -16,17 +18,27 @@ type FrontMatter struct {
 }
 
 func MarkdownToHTML(data PageData) ([]byte, error) {
+	md := goldmark.New()
+	var buf bytes.Buffer
+
+	err := md.Convert([]byte(data.Content), &buf)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	data.Content = template.HTML(buf.String())
+
 	sample, err := template.ParseFiles("templates/layout.html")
 	if err != nil {
 		return []byte{}, err
 	}
 
-	var buff bytes.Buffer
+	var templateBuff bytes.Buffer
 
-	err = sample.Execute(&buff, data)
+	err = sample.Execute(&templateBuff, data)
 	if err != nil {
 		return []byte{}, err
 	}
 
-	return buff.Bytes(), nil
+	return templateBuff.Bytes(), nil
 }
